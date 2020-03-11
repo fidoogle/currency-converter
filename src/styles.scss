@@ -1,0 +1,39 @@
+/*@import url('/css-reset.css');*/
+@import url('https://fonts.googleapis.com/css?family=Montserrat|Nunito|Quicksand|Roboto&display=swap');
+
+$box-size: 384px;
+$box-size-2: 229px;
+$box-color: white;
+$box-border-color: #3272de;
+$button-color: #555;
+$background: #3a3a4d;
+$color: #efefef;
+
+
+/************  Mixins **************/
+@mixin flex-css($direction: row, $justify: center, $align: center, $wrap: nowrap) {
+  display: flex;
+  flex-direction: $direction;
+  flex-wrap: $wrap;
+  justify-content: $justify;
+  align-items: $align;
+}
+
+body {
+  @include flex-css();
+  height: 80vh;
+  font-family: Roboto;
+}
+.box {
+  @include flex-css($direction: column, $align: flex-start);
+  border: 1px solid black;
+  padding: 20px;
+  margin: 20px;
+}
+.error {
+  font-size: 10px;
+  color: red;
+}
+.right-align {
+  text-align:right;
+}
