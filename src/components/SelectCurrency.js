@@ -1,18 +1,21 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect } from 'react'
 import PropTypes from "prop-types";
 
 const SelectCurrency = ({currency, setCurrency}) => {
-    const refContainer = useRef(null);
-    const change = event => setCurrency(event.target.value)
+    const change = event => {
+        setCurrency(JSON.parse(event.target.value))
+    }
 
     useEffect(() => { //good for setting initial value
-        setCurrency(refContainer.current.value)
+        if (currency) {
+            setCurrency(currency[0])
+        }
     }, [currency]);
 
     return (
-        <select onChange={change} ref={refContainer}>
+        <select onChange={change}>
             {currency && currency.map(o => 
-                <option value={o.code} key={o.code}>{o.name} ({o.symbol_native})</option>
+                <option value={JSON.stringify(o)} key={o.code}>{o.name} ({o.symbol_native})</option>
             )}
         </select>
     );

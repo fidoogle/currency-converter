@@ -4,6 +4,16 @@ import SelectCurrency from './SelectCurrency'
 import CircularProgress from '@material-ui/core/CircularProgress'
 import fx from 'money'
 
+const DEFAULT_CURRENCY = {
+    "symbol": "$",
+    "name": "US Dollar",
+    "symbol_native": "$",
+    "decimal_digits": 2,
+    "rounding": 0,
+    "code": "USD",
+    "name_plural": "US dollars"
+}
+
 const CurrencyConverter = () => {
     const [pending, setPending] = useState(false);
 
@@ -13,8 +23,8 @@ const CurrencyConverter = () => {
     const [ratesError, setRatesError] = useState(null);
     const [ratesToError, setRatesToError] = useState(null);
 
-    const [baseCurrency, setBaseCurrency] = useState('USD');
-    const [equivalentCurrency, setEquivalentCurrency] = useState(null);
+    const [baseCurrency, setBaseCurrency] = useState(DEFAULT_CURRENCY);
+    const [equivalentCurrency, setEquivalentCurrency] = useState(DEFAULT_CURRENCY);
 
     const [fromAmount, setFromAmount] = useState(0);
     const [toAmount, setToAmount] = useState(0);
@@ -34,7 +44,7 @@ const CurrencyConverter = () => {
     useEffect(() => {
         if (baseCurrency) {
             setPending(true)
-            fetchRates(baseCurrency).then(
+            fetchRates(baseCurrency.code).then(
                 p => {
                     fx.rates = p.rates
                     computeConversion()
@@ -48,11 +58,11 @@ const CurrencyConverter = () => {
                 }
             )
         }
-    }, [baseCurrency])
+    }, [baseCurrency.code])
 
     useEffect(() => {
         computeConversion()
-    }, [equivalentCurrency])
+    }, [equivalentCurrency.code])
 
     const updateConversion = (event) => {
         setFromAmount(event.target.value)
@@ -62,8 +72,8 @@ const CurrencyConverter = () => {
     const computeConversion = (val) => {
         const startAmount = val || fromAmount
         try {
-            fx.base = baseCurrency
-            setToAmount(fx(startAmount).from(baseCurrency).to(equivalentCurrency))
+            fx.base = baseCurrency.code
+            setToAmount(fx(startAmount).from(baseCurrency.code).to(equivalentCurrency.code))
             setRatesToError(null)
         } catch(e) {
             setToAmount(0)
@@ -85,7 +95,7 @@ const CurrencyConverter = () => {
                     />
                 <SelectCurrency currency={currency} setCurrency={setBaseCurrency}/>
                 {
-                    ratesError && <div className="error">rates unvailable for: {baseCurrency}</div>
+                    baseCurrency && ratesError && <div className="error">rates unvailable for: {baseCurrency.symbol} - {baseCurrency.symbol_native}</div>
                 }
             </div>
             
@@ -98,7 +108,7 @@ const CurrencyConverter = () => {
                     readOnly/>
                 <SelectCurrency currency={currency} setCurrency={setEquivalentCurrency}/>
                 {
-                    ratesToError && <div className="error">rates unvailable for: {equivalentCurrency}</div>
+                    equivalentCurrency && ratesToError && <div className="error">rates unvailable for: {equivalentCurrency.symbol} - {equivalentCurrency.symbol_native}</div>
                 }
             </div>
         </div>
