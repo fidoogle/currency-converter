@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { fetchCommonCurrency, fetchRates } from '../services'
 import SelectCurrency from './SelectCurrency'
-import CircularProgress from '@material-ui/core/CircularProgress'
 import fx from 'money'
 
+const ALLOW_CHARS = /[0-9]+/;
 const DEFAULT_CURRENCY = {
     "symbol": "$",
     "name": "US Dollar",
@@ -15,10 +15,7 @@ const DEFAULT_CURRENCY = {
 }
 
 const CurrencyConverter = () => {
-    const [pending, setPending] = useState(false);
-
-    const [currency, setCurrency] = useState(null);
-    const [currencyError, setCurrencyError] = useState(null);
+    const [currency, setCurrency] = useState(null); //common currency
 
     const [ratesError, setRatesError] = useState(null);
     const [ratesToError, setRatesToError] = useState(null);
@@ -26,6 +23,7 @@ const CurrencyConverter = () => {
     const [baseCurrency, setBaseCurrency] = useState(DEFAULT_CURRENCY);
     const [equivalentCurrency, setEquivalentCurrency] = useState(DEFAULT_CURRENCY);
 
+    const [formattedAmount, setFormattedAmount] = useState('0.00');
     const [fromAmount, setFromAmount] = useState(0);
     const [toAmount, setToAmount] = useState(0);
  
@@ -35,26 +33,22 @@ const CurrencyConverter = () => {
                 setCurrency(Object.values(p))
             },
             e => {
-                setPending(false)
-                setCurrencyError(e)
+                //setCurrencyError(e)
             }
         )
     }, []);
 
     useEffect(() => {
         if (baseCurrency) {
-            setPending(true)
             fetchRates(baseCurrency.code).then(
                 p => {
                     fx.rates = p.rates
                     computeConversion()
-                    setPending(false)
                     setRatesError(null)
                 },
                 e => {
                     setRatesError(e)
                     setToAmount(0)
-                    setPending(false)
                 }
             )
         }
@@ -64,21 +58,46 @@ const CurrencyConverter = () => {
         computeConversion()
     }, [equivalentCurrency.code])
 
+    const pad = (number, length) => {
+        let str = '' + number;
+        while (str.length < length) {
+            str = '0' + str;
+        }
+        const newStr = str.split('');
+        newStr.splice(-2,0,'.')
+        return newStr;
+    }
+
     const updateConversion = (event) => {
-        setFromAmount(event.target.value)
-        computeConversion(event.target.value)
+        const amount = event.target.value
+        setFromAmount(amount)
+        setFormattedAmount(pad(amount, 3))
+        computeConversion(amount)
     }
 
     const computeConversion = (val) => {
         const startAmount = val || fromAmount
         try {
             fx.base = baseCurrency.code
-            setToAmount(fx(startAmount).from(baseCurrency.code).to(equivalentCurrency.code))
+            setToAmount(fx(startAmount).from(baseCurrency.code).to(equivalentCurrency.code)/100)
             setRatesToError(null)
         } catch(e) {
             setToAmount(0)
             setRatesToError(e)
         }
+    }
+
+    const numbersOnly = (event) => {
+        if (!ALLOW_CHARS.test(event.key)) {
+            event.preventDefault();
+        } 
+    }
+
+    const correctFormat = (val) => {//correct weird format inside input field
+        if (typeof(val)==='object') {
+            return val.join('')
+        }
+        return val
     }
 
     return (
@@ -87,12 +106,22 @@ const CurrencyConverter = () => {
             <hr/>
             <div className="box">
                 Base Currency:
-                <input 
-                    type="text" 
-                    className="right-align" 
-                    placeholder="from amount"
-                    onChange={updateConversion}
-                    />
+                <div className="mask">
+                    <input 
+                        type="text" 
+                        className="user-input"
+                        value={fromAmount}
+                        onChange={updateConversion}
+                        onKeyPress={numbersOnly}
+                        />
+                    <input 
+                        type="text" 
+                        className="user-sees"
+                        onChange={()=>{}}
+                        value={correctFormat(formattedAmount)}
+                        />
+                </div>
+                <br/><br/>
                 <SelectCurrency currency={currency} setCurrency={setBaseCurrency}/>
                 {
                     baseCurrency && ratesError && <div className="error">rates unvailable for: {baseCurrency.symbol} - {baseCurrency.symbol_native}</div>
@@ -106,6 +135,7 @@ const CurrencyConverter = () => {
                     className="right-align" 
                     value={toAmount} 
                     readOnly/>
+                <br/>
                 <SelectCurrency currency={currency} setCurrency={setEquivalentCurrency}/>
                 {
                     equivalentCurrency && ratesToError && <div className="error">rates unvailable for: {equivalentCurrency.symbol} - {equivalentCurrency.symbol_native}</div>

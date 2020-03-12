@@ -34,6 +34,25 @@ body {
   font-size: 11px;
   color: red;
 }
+.mask {
+  position: relative;
+}
 .right-align {
+  text-align: right;
+}
+.user-input {
+  position: absolute;
+  top: 0;
+  left: 0;
   text-align:right;
+  z-index: 10;
+  background-color:rgba(0, 0, 0, 0);
+  color: transparent;
+}
+.user-sees {
+  position: absolute;
+  top: 0;
+  left: 0;
+  text-align:right;
+  z-index: 1;
 }
